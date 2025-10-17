@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { Pencil, Trash2, Beaker } from "lucide-react"
+import { Pencil, Trash2, Beaker, FlaskConical } from "lucide-react"
 import type { Chemical } from "@/lib/types"
 import { formatDate } from "@/lib/utils"
 
@@ -12,12 +12,14 @@ interface ChemicalCardProps {
   chemical: Chemical
   onEdit: (chemical: Chemical) => void
   onDelete: (id: string) => void
+  onMix?: (chemical: Chemical) => void
 }
 
-export function ChemicalCard({ chemical, onEdit, onDelete }: ChemicalCardProps) {
+export function ChemicalCard({ chemical, onEdit, onDelete, onMix }: ChemicalCardProps) {
   const remainingPercentage = ((chemical.capacity - chemical.used) / chemical.capacity) * 100
   const isLow = remainingPercentage < 25
   const isMixed = chemical.state === "mixed"
+  const isConcentrate = !chemical.state || chemical.state === "concentrate"
 
   const now = new Date()
   // For mixed solutions, check working expiry date; for concentrates, check regular expiry date
@@ -121,6 +123,18 @@ export function ChemicalCard({ chemical, onEdit, onDelete }: ChemicalCardProps) 
             </div>
           ) : null}
         </div>
+
+        {isConcentrate && onMix && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full"
+            onClick={() => onMix(chemical)}
+          >
+            <FlaskConical className="h-4 w-4 mr-2" />
+            Mix Solution
+          </Button>
+        )}
 
         {chemical.notes && <p className="text-sm text-muted-foreground border-t pt-3">{chemical.notes}</p>}
       </CardContent>

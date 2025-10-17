@@ -7,8 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Search } from "lucide-react"
 import { ChemicalCard } from "@/components/chemical-card"
 import { ChemicalForm } from "@/components/chemical-form"
+import { MixChemicalDialog } from "@/components/mix-chemical-dialog"
 import { getChemicals, addChemical, updateChemical, deleteChemical } from "@/lib/storage"
 import type { Chemical } from "@/lib/types"
+import { toast } from "sonner"
 
 export default function ChemicalsPage() {
   const [chemicals, setChemicals] = useState<Chemical[]>([])
@@ -18,6 +20,8 @@ export default function ChemicalsPage() {
   const [stateFilter, setStateFilter] = useState<string>("all")
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingChemical, setEditingChemical] = useState<Chemical | undefined>()
+  const [isMixDialogOpen, setIsMixDialogOpen] = useState(false)
+  const [mixingChemical, setMixingChemical] = useState<Chemical | undefined>()
 
   useEffect(() => {
     setChemicals(getChemicals())
@@ -70,6 +74,31 @@ export default function ChemicalsPage() {
   const handleAddNew = () => {
     setEditingChemical(undefined)
     setIsFormOpen(true)
+  }
+
+  const handleMix = (chemical: Chemical) => {
+    setMixingChemical(chemical)
+    setIsMixDialogOpen(true)
+  }
+
+  const handleMixComplete = (mixedChemical: Omit<Chemical, "id">, concentrateUsed: number) => {
+    // Create the new mixed chemical
+    addChemical(mixedChemical)
+
+    // Deduct the used amount from the concentrate
+    if (mixingChemical) {
+      updateChemical(mixingChemical.id, {
+        used: mixingChemical.used + concentrateUsed,
+      })
+    }
+
+    // Refresh the chemicals list
+    setChemicals(getChemicals())
+
+    // Show success message
+    toast.success("Working solution mixed successfully!", {
+      description: `Created ${mixedChemical.capacity}ml of ${mixedChemical.name}`,
+    })
   }
 
   return (
@@ -132,7 +161,13 @@ export default function ChemicalsPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredChemicals.map((chemical) => (
-                <ChemicalCard key={chemical.id} chemical={chemical} onEdit={handleEdit} onDelete={handleDelete} />
+                <ChemicalCard
+                  key={chemical.id}
+                  chemical={chemical}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  onMix={handleMix}
+                />
               ))}
             </div>
           )}
@@ -140,6 +175,12 @@ export default function ChemicalsPage() {
       </div>
 
       <ChemicalForm chemical={editingChemical} open={isFormOpen} onOpenChange={setIsFormOpen} onSave={handleSave} />
+      <MixChemicalDialog
+        concentrate={mixingChemical}
+        open={isMixDialogOpen}
+        onOpenChange={setIsMixDialogOpen}
+        onMix={handleMixComplete}
+      />
     </div>
   )
 }

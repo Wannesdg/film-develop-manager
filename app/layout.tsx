@@ -5,6 +5,7 @@ import { Analytics } from "@vercel/analytics/next"
 import { Navigation } from "@/components/navigation"
 import { SettingsDialog } from "@/components/settings-dialog"
 import { Toaster } from "@/components/ui/toaster"
+import { Toaster as Sonner } from "@/components/ui/sonner"
 import "./globals.css"
 
 const _geist = Geist({ subsets: ["latin"] })
@@ -34,6 +35,7 @@ export default function RootLayout({
           <main className="flex-1">{children}</main>
         </div>
         <Toaster />
+        <Sonner />
         <Analytics />
       </body>
     </html>

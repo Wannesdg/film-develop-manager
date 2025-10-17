@@ -47,9 +47,33 @@ export function ChemicalForm({ chemical, open, onOpenChange, onSave }: ChemicalF
   useEffect(() => {
     // Load available concentrate chemicals for the parent dropdown
     const chemicals = getChemicals()
-    const concentrates = chemicals.filter((c) => (c.state || "concentrate") === "concentrate")
+    // Filter to only concentrates, and exclude the current chemical being edited
+    const concentrates = chemicals.filter(
+      (c) => (c.state || "concentrate") === "concentrate" && c.id !== chemical?.id
+    )
     setConcentrateChemicals(concentrates)
-  }, [open])
+  }, [open, chemical])
+
+  useEffect(() => {
+    // Reset form data when chemical prop changes or dialog opens
+    if (chemical) {
+      setFormData(chemical)
+    } else {
+      setFormData({
+        name: "",
+        type: "developer",
+        brand: "",
+        capacity: 1000,
+        used: 0,
+        dilution: "",
+        notes: "",
+        purchaseDate: new Date().toISOString().split("T")[0],
+        expiryDate: "",
+        cost: undefined,
+        state: "concentrate",
+      })
+    }
+  }, [chemical, open])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
