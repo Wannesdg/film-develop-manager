@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Pencil, Trash2, Film, Calendar, Star } from "lucide-react"
+import { Pencil, Trash2, Film, Calendar, Star, CheckCircle } from "lucide-react"
 import type { FilmRoll } from "@/lib/types"
 import { formatDate } from "@/lib/utils"
 
@@ -12,9 +12,10 @@ interface FilmRollCardProps {
   recipeName?: string
   onEdit: (filmRoll: FilmRoll) => void
   onDelete: (id: string) => void
+  onDevelop?: (filmRoll: FilmRoll) => void
 }
 
-export function FilmRollCard({ filmRoll, recipeName, onEdit, onDelete }: FilmRollCardProps) {
+export function FilmRollCard({ filmRoll, recipeName, onEdit, onDelete, onDevelop }: FilmRollCardProps) {
   const isDeveloped = !!filmRoll.developedDate
 
   const formatColors = {
@@ -104,6 +105,13 @@ export function FilmRollCard({ filmRoll, recipeName, onEdit, onDelete }: FilmRol
             <p className="text-xs text-muted-foreground mb-1">Recipe Used</p>
             <p className="text-sm font-medium">{recipeName}</p>
           </div>
+        )}
+
+        {!isDeveloped && onDevelop && (
+          <Button variant="outline" size="sm" className="w-full" onClick={() => onDevelop(filmRoll)}>
+            <CheckCircle className="h-4 w-4 mr-2" />
+            Mark as Developed
+          </Button>
         )}
 
         {filmRoll.notes && <p className="text-sm text-muted-foreground border-t pt-3">{filmRoll.notes}</p>}

@@ -42,4 +42,20 @@ export interface FilmRoll {
   chemicalsUsed?: string[]
   notes?: string
   rating?: number
+  developmentRoundId?: string // Link to development round if developed via a round
+}
+
+export interface DevelopmentRound {
+  id: string
+  name: string
+  date: string
+  recipeId?: string
+  filmRollIds: string[] // Multiple rolls developed together
+  chemicalsUsed: {
+    chemicalId: string
+    amountUsed: number // Amount consumed in ml
+  }[]
+  temperature?: number // Actual temperature used
+  time?: number // Actual time in seconds
+  notes?: string
 }

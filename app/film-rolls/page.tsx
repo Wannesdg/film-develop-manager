@@ -7,8 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Search } from "lucide-react"
 import { FilmRollCard } from "@/components/film-roll-card"
 import { FilmRollForm } from "@/components/film-roll-form"
+import { DevelopFilmDialog } from "@/components/develop-film-dialog"
 import { getFilmRolls, addFilmRoll, updateFilmRoll, deleteFilmRoll, getRecipes } from "@/lib/storage"
 import type { FilmRoll, Recipe } from "@/lib/types"
+import { toast } from "sonner"
 
 export default function FilmRollsPage() {
   const [filmRolls, setFilmRolls] = useState<FilmRoll[]>([])
@@ -19,6 +21,8 @@ export default function FilmRollsPage() {
   const [formatFilter, setFormatFilter] = useState<string>("all")
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingFilmRoll, setEditingFilmRoll] = useState<FilmRoll | undefined>()
+  const [isDevelopDialogOpen, setIsDevelopDialogOpen] = useState(false)
+  const [developingFilmRoll, setDevelopingFilmRoll] = useState<FilmRoll | undefined>()
 
   useEffect(() => {
     setFilmRolls(getFilmRolls())
@@ -79,6 +83,40 @@ export default function FilmRollsPage() {
   const getRecipeName = (recipeId?: string) => {
     if (!recipeId) return undefined
     return recipes.find((r) => r.id === recipeId)?.name
+  }
+
+  const handleDevelop = (filmRoll: FilmRoll) => {
+    setDevelopingFilmRoll(filmRoll)
+    setIsDevelopDialogOpen(true)
+  }
+
+  const handleDevelopComplete = (developmentData: {
+    developedDate: string
+    recipeId?: string
+    chemicalsUsed?: string[]
+    rating?: number
+    notes?: string
+  }) => {
+    if (!developingFilmRoll) return
+
+    // Update the film roll with development data
+    updateFilmRoll(developingFilmRoll.id, {
+      ...developmentData,
+      // Append development notes to existing notes if present
+      notes: developmentData.notes
+        ? developingFilmRoll.notes
+          ? `${developingFilmRoll.notes}\n\nDevelopment: ${developmentData.notes}`
+          : developmentData.notes
+        : developingFilmRoll.notes,
+    })
+
+    // Refresh film rolls
+    setFilmRolls(getFilmRolls())
+
+    // Show success message
+    toast.success("Film roll marked as developed!", {
+      description: `${developingFilmRoll.filmName} has been marked as developed`,
+    })
   }
 
   return (
@@ -147,6 +185,7 @@ export default function FilmRollsPage() {
                   recipeName={getRecipeName(filmRoll.recipeId)}
                   onEdit={handleEdit}
                   onDelete={handleDelete}
+                  onDevelop={handleDevelop}
                 />
               ))}
             </div>
@@ -155,6 +194,12 @@ export default function FilmRollsPage() {
       </div>
 
       <FilmRollForm filmRoll={editingFilmRoll} open={isFormOpen} onOpenChange={setIsFormOpen} onSave={handleSave} />
+      <DevelopFilmDialog
+        filmRoll={developingFilmRoll}
+        open={isDevelopDialogOpen}
+        onOpenChange={setIsDevelopDialogOpen}
+        onDevelop={handleDevelopComplete}
+      />
     </div>
   )
 }

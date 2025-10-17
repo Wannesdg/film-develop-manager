@@ -43,16 +43,43 @@ export function FilmRollForm({ filmRoll, open, onOpenChange, onSave }: FilmRollF
     },
   )
 
+  const isCreateMode = !filmRoll
+
   useEffect(() => {
     setRecipes(getRecipes())
   }, [])
+
+  useEffect(() => {
+    // Reset form data when dialog opens
+    if (filmRoll) {
+      setFormData(filmRoll)
+    } else {
+      setFormData({
+        filmName: "",
+        filmType: "",
+        iso: 400,
+        format: "35mm",
+        frames: 36,
+        shotDate: "",
+        notes: "",
+      })
+    }
+  }, [filmRoll, open])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (filmRoll) {
       onSave({ ...filmRoll, ...formData } as FilmRoll)
     } else {
-      onSave(formData as Omit<FilmRoll, "id">)
+      // When creating new roll, ensure development fields are not set
+      const newRoll = {
+        ...formData,
+        developedDate: undefined,
+        recipeId: undefined,
+        chemicalsUsed: undefined,
+        rating: undefined,
+      }
+      onSave(newRoll as Omit<FilmRoll, "id">)
     }
     onOpenChange(false)
   }
@@ -130,80 +157,88 @@ export function FilmRollForm({ filmRoll, open, onOpenChange, onSave }: FilmRollF
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="shotDate">Shot Date</Label>
-              <Input
-                id="shotDate"
-                type="date"
-                value={formData.shotDate}
-                onChange={(e) => setFormData({ ...formData, shotDate: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="developedDate">Developed Date</Label>
-              <Input
-                id="developedDate"
-                type="date"
-                value={formData.developedDate}
-                onChange={(e) => setFormData({ ...formData, developedDate: e.target.value })}
-              />
-            </div>
-          </div>
-
-          {recipes.length > 0 && (
-            <div className="space-y-2">
-              <Label htmlFor="recipeId">Recipe Used</Label>
-              <Select
-                value={formData.recipeId}
-                onValueChange={(value) => setFormData({ ...formData, recipeId: value })}
-              >
-                <SelectTrigger id="recipeId">
-                  <SelectValue placeholder="Select a recipe (optional)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem> {/* Updated value prop to be a non-empty string */}
-                  {recipes.map((recipe) => (
-                    <SelectItem key={recipe.id} value={recipe.id}>
-                      {recipe.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
           <div className="space-y-2">
-            <Label>Rating</Label>
-            <div className="flex gap-2">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => setFormData({ ...formData, rating: i + 1 })}
-                  className="focus:outline-none focus:ring-2 focus:ring-ring rounded"
-                >
-                  <Star
-                    className={`h-6 w-6 transition-colors ${
-                      formData.rating && i < formData.rating
-                        ? "fill-primary text-primary"
-                        : "text-muted-foreground hover:text-primary"
-                    }`}
-                  />
-                </button>
-              ))}
-              {formData.rating && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setFormData({ ...formData, rating: undefined })}
-                >
-                  Clear
-                </Button>
-              )}
-            </div>
+            <Label htmlFor="shotDate">Shot Date</Label>
+            <Input
+              id="shotDate"
+              type="date"
+              value={formData.shotDate}
+              onChange={(e) => setFormData({ ...formData, shotDate: e.target.value })}
+            />
           </div>
+
+          {/* Development fields - only show in edit mode */}
+          {!isCreateMode && (
+            <>
+              <div className="border-t pt-4">
+                <h3 className="text-sm font-semibold mb-3">Development Information</h3>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="developedDate">Developed Date</Label>
+                <Input
+                  id="developedDate"
+                  type="date"
+                  value={formData.developedDate}
+                  onChange={(e) => setFormData({ ...formData, developedDate: e.target.value })}
+                />
+              </div>
+
+              {recipes.length > 0 && (
+                <div className="space-y-2">
+                  <Label htmlFor="recipeId">Recipe Used</Label>
+                  <Select
+                    value={formData.recipeId}
+                    onValueChange={(value) => setFormData({ ...formData, recipeId: value })}
+                  >
+                    <SelectTrigger id="recipeId">
+                      <SelectValue placeholder="Select a recipe (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {recipes.map((recipe) => (
+                        <SelectItem key={recipe.id} value={recipe.id}>
+                          {recipe.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label>Rating</Label>
+                <div className="flex gap-2">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, rating: i + 1 })}
+                      className="focus:outline-none focus:ring-2 focus:ring-ring rounded"
+                    >
+                      <Star
+                        className={`h-6 w-6 transition-colors ${
+                          formData.rating && i < formData.rating
+                            ? "fill-primary text-primary"
+                            : "text-muted-foreground hover:text-primary"
+                        }`}
+                      />
+                    </button>
+                  ))}
+                  {formData.rating && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setFormData({ ...formData, rating: undefined })}
+                    >
+                      Clear
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="notes">Notes</Label>
