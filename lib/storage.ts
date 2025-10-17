@@ -1,9 +1,10 @@
-import type { Chemical, Recipe, FilmRoll } from "./types"
+import type { Chemical, Recipe, FilmRoll, DevelopmentRound } from "./types"
 
 const STORAGE_KEYS = {
   CHEMICALS: "film-tracker-chemicals",
   RECIPES: "film-tracker-recipes",
   FILM_ROLLS: "film-tracker-film-rolls",
+  DEVELOPMENT_ROUNDS: "film-tracker-development-rounds",
 }
 
 // Chemicals
@@ -106,4 +107,38 @@ export function updateFilmRoll(id: string, updates: Partial<FilmRoll>): void {
 export function deleteFilmRoll(id: string): void {
   const filmRolls = getFilmRolls().filter((f) => f.id !== id)
   saveFilmRolls(filmRolls)
+}
+
+// Development Rounds
+export function getDevelopmentRounds(): DevelopmentRound[] {
+  if (typeof window === "undefined") return []
+  const data = localStorage.getItem(STORAGE_KEYS.DEVELOPMENT_ROUNDS)
+  return data ? JSON.parse(data) : []
+}
+
+export function saveDevelopmentRounds(rounds: DevelopmentRound[]): void {
+  if (typeof window === "undefined") return
+  localStorage.setItem(STORAGE_KEYS.DEVELOPMENT_ROUNDS, JSON.stringify(rounds))
+}
+
+export function addDevelopmentRound(round: Omit<DevelopmentRound, "id">): DevelopmentRound {
+  const rounds = getDevelopmentRounds()
+  const newRound = { ...round, id: crypto.randomUUID() }
+  rounds.push(newRound)
+  saveDevelopmentRounds(rounds)
+  return newRound
+}
+
+export function updateDevelopmentRound(id: string, updates: Partial<DevelopmentRound>): void {
+  const rounds = getDevelopmentRounds()
+  const index = rounds.findIndex((r) => r.id === id)
+  if (index !== -1) {
+    rounds[index] = { ...rounds[index], ...updates }
+    saveDevelopmentRounds(rounds)
+  }
+}
+
+export function deleteDevelopmentRound(id: string): void {
+  const rounds = getDevelopmentRounds().filter((r) => r.id !== id)
+  saveDevelopmentRounds(rounds)
 }

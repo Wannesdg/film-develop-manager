@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Plus, Search } from "lucide-react"
 import { ChemicalCard } from "@/components/chemical-card"
 import { ChemicalForm } from "@/components/chemical-form"
@@ -14,7 +15,8 @@ import { toast } from "sonner"
 
 export default function ChemicalsPage() {
   const [chemicals, setChemicals] = useState<Chemical[]>([])
-  const [filteredChemicals, setFilteredChemicals] = useState<Chemical[]>([])
+  const [filteredActiveChemicals, setFilteredActiveChemicals] = useState<Chemical[]>([])
+  const [filteredExpiredChemicals, setFilteredExpiredChemicals] = useState<Chemical[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [typeFilter, setTypeFilter] = useState<string>("all")
   const [stateFilter, setStateFilter] = useState<string>("all")
@@ -28,6 +30,9 @@ export default function ChemicalsPage() {
   }, [])
 
   useEffect(() => {
+    const now = new Date()
+
+    // Apply search and filters
     let filtered = chemicals
 
     if (searchQuery) {
@@ -46,7 +51,31 @@ export default function ChemicalsPage() {
       filtered = filtered.filter((c) => (c.state || "concentrate") === stateFilter)
     }
 
-    setFilteredChemicals(filtered)
+    // Separate into active and expired
+    const active: Chemical[] = []
+    const expired: Chemical[] = []
+
+    filtered.forEach((chemical) => {
+      // Check the appropriate expiry date based on state
+      const expiryDateStr = chemical.state === "mixed" && chemical.workingExpiryDate
+        ? chemical.workingExpiryDate
+        : chemical.expiryDate
+
+      if (expiryDateStr) {
+        const expiryDate = new Date(expiryDateStr)
+        if (expiryDate < now) {
+          expired.push(chemical)
+        } else {
+          active.push(chemical)
+        }
+      } else {
+        // No expiry date set, consider it active
+        active.push(chemical)
+      }
+    })
+
+    setFilteredActiveChemicals(active)
+    setFilteredExpiredChemicals(expired)
   }, [chemicals, searchQuery, typeFilter, stateFilter])
 
   const handleSave = (chemicalData: Omit<Chemical, "id"> | Chemical) => {
@@ -150,27 +179,62 @@ export default function ChemicalsPage() {
             </Select>
           </div>
 
-          {filteredChemicals.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground text-lg">
-                {chemicals.length === 0
-                  ? "No chemicals yet. Add your first chemical to get started!"
-                  : "No chemicals match your search."}
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredChemicals.map((chemical) => (
-                <ChemicalCard
-                  key={chemical.id}
-                  chemical={chemical}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                  onMix={handleMix}
-                />
-              ))}
-            </div>
-          )}
+          <Tabs defaultValue="active" className="w-full">
+            <TabsList>
+              <TabsTrigger value="active">
+                Active ({filteredActiveChemicals.length})
+              </TabsTrigger>
+              <TabsTrigger value="expired">
+                Expired ({filteredExpiredChemicals.length})
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="active" className="mt-6">
+              {filteredActiveChemicals.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground text-lg">
+                    {chemicals.length === 0
+                      ? "No chemicals yet. Add your first chemical to get started!"
+                      : "No active chemicals match your search."}
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredActiveChemicals.map((chemical) => (
+                    <ChemicalCard
+                      key={chemical.id}
+                      chemical={chemical}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                      onMix={handleMix}
+                    />
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="expired" className="mt-6">
+              {filteredExpiredChemicals.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground text-lg">
+                    No expired chemicals match your search.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredExpiredChemicals.map((chemical) => (
+                    <ChemicalCard
+                      key={chemical.id}
+                      chemical={chemical}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                      onMix={handleMix}
+                    />
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
 
