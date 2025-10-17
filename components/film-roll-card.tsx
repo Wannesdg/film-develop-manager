@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Pencil, Trash2, Film, Calendar, Star } from "lucide-react"
 import type { FilmRoll } from "@/lib/types"
+import { formatDate } from "@/lib/utils"
 
 interface FilmRollCardProps {
   filmRoll: FilmRoll
@@ -82,14 +83,18 @@ export function FilmRollCard({ filmRoll, recipeName, onEdit, onDelete }: FilmRol
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
               <span className="text-muted-foreground">Shot:</span>
-              <span className="font-medium">{new Date(filmRoll.shotDate).toLocaleDateString()}</span>
+              <span className="font-medium" suppressHydrationWarning>
+                {formatDate(filmRoll.shotDate)}
+              </span>
             </div>
           )}
           {filmRoll.developedDate && (
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
               <span className="text-muted-foreground">Developed:</span>
-              <span className="font-medium">{new Date(filmRoll.developedDate).toLocaleDateString()}</span>
+              <span className="font-medium" suppressHydrationWarning>
+                {formatDate(filmRoll.developedDate)}
+              </span>
             </div>
           )}
         </div>

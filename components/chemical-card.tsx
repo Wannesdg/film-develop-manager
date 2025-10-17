@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Pencil, Trash2, Beaker } from "lucide-react"
 import type { Chemical } from "@/lib/types"
+import { formatDate } from "@/lib/utils"
 
 interface ChemicalCardProps {
   chemical: Chemical
@@ -16,8 +17,17 @@ interface ChemicalCardProps {
 export function ChemicalCard({ chemical, onEdit, onDelete }: ChemicalCardProps) {
   const remainingPercentage = ((chemical.capacity - chemical.used) / chemical.capacity) * 100
   const isLow = remainingPercentage < 25
-  const isExpiringSoon =
-    chemical.expiryDate && new Date(chemical.expiryDate) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+  const isMixed = chemical.state === "mixed"
+
+  const now = new Date()
+  // For mixed solutions, check working expiry date; for concentrates, check regular expiry date
+  const expiryDate = isMixed && chemical.workingExpiryDate
+    ? new Date(chemical.workingExpiryDate)
+    : chemical.expiryDate
+    ? new Date(chemical.expiryDate)
+    : null
+  const isExpired = expiryDate && expiryDate < now
+  const isExpiringSoon = expiryDate && !isExpired && expiryDate < new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
 
   const typeColors = {
     developer: "bg-chart-1",
@@ -60,8 +70,12 @@ export function ChemicalCard({ chemical, onEdit, onDelete }: ChemicalCardProps) 
           <Badge variant="secondary" className="capitalize">
             {chemical.type.replace("-", " ")}
           </Badge>
+          <Badge variant={isMixed ? "default" : "outline"} className="capitalize">
+            {chemical.state || "concentrate"}
+          </Badge>
           {chemical.dilution && <Badge variant="outline">{chemical.dilution}</Badge>}
           {isLow && <Badge variant="destructive">Low Stock</Badge>}
+          {isExpired && <Badge variant="destructive">Expired</Badge>}
           {isExpiringSoon && <Badge variant="destructive">Expiring Soon</Badge>}
         </div>
 
@@ -76,16 +90,36 @@ export function ChemicalCard({ chemical, onEdit, onDelete }: ChemicalCardProps) 
         </div>
 
         <div className="grid grid-cols-2 gap-3 text-sm">
-          <div>
-            <p className="text-muted-foreground">Purchased</p>
-            <p className="font-medium">{new Date(chemical.purchaseDate).toLocaleDateString()}</p>
-          </div>
-          {chemical.expiryDate && (
+          {isMixed && chemical.mixedDate ? (
             <div>
-              <p className="text-muted-foreground">Expires</p>
-              <p className="font-medium">{new Date(chemical.expiryDate).toLocaleDateString()}</p>
+              <p className="text-muted-foreground">Mixed</p>
+              <p className="font-medium" suppressHydrationWarning>
+                {formatDate(chemical.mixedDate)}
+              </p>
+            </div>
+          ) : (
+            <div>
+              <p className="text-muted-foreground">Purchased</p>
+              <p className="font-medium" suppressHydrationWarning>
+                {formatDate(chemical.purchaseDate)}
+              </p>
             </div>
           )}
+          {isMixed && chemical.workingExpiryDate ? (
+            <div>
+              <p className="text-muted-foreground">Working Expiry</p>
+              <p className="font-medium" suppressHydrationWarning>
+                {formatDate(chemical.workingExpiryDate)}
+              </p>
+            </div>
+          ) : chemical.expiryDate ? (
+            <div>
+              <p className="text-muted-foreground">Expires</p>
+              <p className="font-medium" suppressHydrationWarning>
+                {formatDate(chemical.expiryDate)}
+              </p>
+            </div>
+          ) : null}
         </div>
 
         {chemical.notes && <p className="text-sm text-muted-foreground border-t pt-3">{chemical.notes}</p>}

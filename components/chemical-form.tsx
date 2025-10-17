@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import type { Chemical } from "@/lib/types"
+import { getChemicals } from "@/lib/storage"
 
 interface ChemicalFormProps {
   chemical?: Chemical
@@ -38,15 +39,26 @@ export function ChemicalForm({ chemical, open, onOpenChange, onSave }: ChemicalF
       purchaseDate: new Date().toISOString().split("T")[0],
       expiryDate: "",
       cost: undefined,
+      state: "concentrate", // default to concentrate for new chemicals
     },
   )
+  const [concentrateChemicals, setConcentrateChemicals] = useState<Chemical[]>([])
+
+  useEffect(() => {
+    // Load available concentrate chemicals for the parent dropdown
+    const chemicals = getChemicals()
+    const concentrates = chemicals.filter((c) => (c.state || "concentrate") === "concentrate")
+    setConcentrateChemicals(concentrates)
+  }, [open])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (chemical) {
-      onSave({ ...chemical, ...formData } as Chemical)
+      // Ensure existing chemicals get state if they don't have one
+      onSave({ ...chemical, ...formData, state: formData.state || chemical.state || "concentrate" } as Chemical)
     } else {
-      onSave(formData as Omit<Chemical, "id">)
+      // New chemicals default to concentrate
+      onSave({ ...formData, state: formData.state || "concentrate" } as Omit<Chemical, "id">)
     }
     onOpenChange(false)
   }
@@ -82,7 +94,7 @@ export function ChemicalForm({ chemical, open, onOpenChange, onSave }: ChemicalF
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="type">Type *</Label>
               <Select
@@ -97,6 +109,22 @@ export function ChemicalForm({ chemical, open, onOpenChange, onSave }: ChemicalF
                   <SelectItem value="stop-bath">Stop Bath</SelectItem>
                   <SelectItem value="fixer">Fixer</SelectItem>
                   <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="state">State *</Label>
+              <Select
+                value={formData.state || "concentrate"}
+                onValueChange={(value) => setFormData({ ...formData, state: value as Chemical["state"] })}
+                disabled={!!formData.parentChemicalId}
+              >
+                <SelectTrigger id="state">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="concentrate">Concentrate</SelectItem>
+                  <SelectItem value="mixed">Mixed</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -137,27 +165,72 @@ export function ChemicalForm({ chemical, open, onOpenChange, onSave }: ChemicalF
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="purchaseDate">Purchase Date *</Label>
-              <Input
-                id="purchaseDate"
-                type="date"
-                value={formData.purchaseDate}
-                onChange={(e) => setFormData({ ...formData, purchaseDate: e.target.value })}
-                required
-              />
+          {formData.state === "mixed" ? (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="parentChemicalId">Source Concentrate</Label>
+                <Select
+                  value={formData.parentChemicalId || ""}
+                  onValueChange={(value) => setFormData({ ...formData, parentChemicalId: value })}
+                >
+                  <SelectTrigger id="parentChemicalId">
+                    <SelectValue placeholder="Select source concentrate..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {concentrateChemicals.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name} - {c.brand}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="mixedDate">Mixed Date *</Label>
+                  <Input
+                    id="mixedDate"
+                    type="date"
+                    value={formData.mixedDate || new Date().toISOString().split("T")[0]}
+                    onChange={(e) => setFormData({ ...formData, mixedDate: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="workingExpiryDate">Working Solution Expiry</Label>
+                  <Input
+                    id="workingExpiryDate"
+                    type="date"
+                    value={formData.workingExpiryDate}
+                    onChange={(e) => setFormData({ ...formData, workingExpiryDate: e.target.value })}
+                  />
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="purchaseDate">Purchase Date *</Label>
+                <Input
+                  id="purchaseDate"
+                  type="date"
+                  value={formData.purchaseDate}
+                  onChange={(e) => setFormData({ ...formData, purchaseDate: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="expiryDate">Expiry Date</Label>
+                <Input
+                  id="expiryDate"
+                  type="date"
+                  value={formData.expiryDate}
+                  onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="expiryDate">Expiry Date</Label>
-              <Input
-                id="expiryDate"
-                type="date"
-                value={formData.expiryDate}
-                onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
-              />
-            </div>
-          </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="cost">Cost</Label>

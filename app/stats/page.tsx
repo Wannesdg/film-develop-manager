@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Beaker, Film, BookOpen, TrendingUp, Calendar, Star } from "lucide-react"
 import { getChemicals, getRecipes, getFilmRolls } from "@/lib/storage"
+import { format } from "date-fns"
 
 export default function StatsPage() {
   const [stats, setStats] = useState({
@@ -86,7 +87,7 @@ export default function StatsPage() {
 
     const monthCounts = recentRolls.reduce(
       (acc, f) => {
-        const month = new Date(f.developedDate!).toLocaleDateString("en-US", { month: "short", year: "numeric" })
+        const month = format(new Date(f.developedDate!), "MMM yyyy")
         acc[month] = (acc[month] || 0) + 1
         return acc
       },

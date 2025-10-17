@@ -15,6 +15,7 @@ export default function ChemicalsPage() {
   const [filteredChemicals, setFilteredChemicals] = useState<Chemical[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [typeFilter, setTypeFilter] = useState<string>("all")
+  const [stateFilter, setStateFilter] = useState<string>("all")
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingChemical, setEditingChemical] = useState<Chemical | undefined>()
 
@@ -37,8 +38,12 @@ export default function ChemicalsPage() {
       filtered = filtered.filter((c) => c.type === typeFilter)
     }
 
+    if (stateFilter !== "all") {
+      filtered = filtered.filter((c) => (c.state || "concentrate") === stateFilter)
+    }
+
     setFilteredChemicals(filtered)
-  }, [chemicals, searchQuery, typeFilter])
+  }, [chemicals, searchQuery, typeFilter, stateFilter])
 
   const handleSave = (chemicalData: Omit<Chemical, "id"> | Chemical) => {
     if ("id" in chemicalData) {
@@ -102,6 +107,16 @@ export default function ChemicalsPage() {
                 <SelectItem value="stop-bath">Stop Bath</SelectItem>
                 <SelectItem value="fixer">Fixer</SelectItem>
                 <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={stateFilter} onValueChange={setStateFilter}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All States</SelectItem>
+                <SelectItem value="concentrate">Concentrate</SelectItem>
+                <SelectItem value="mixed">Mixed</SelectItem>
               </SelectContent>
             </Select>
           </div>

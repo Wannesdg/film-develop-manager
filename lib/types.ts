@@ -10,6 +10,11 @@ export interface Chemical {
   purchaseDate: string
   expiryDate?: string
   cost?: number
+  // Chemical state management
+  state?: "concentrate" | "mixed" // defaults to "concentrate" if not specified
+  parentChemicalId?: string // if mixed, link to the concentrate source
+  mixedDate?: string // when the working solution was mixed
+  workingExpiryDate?: string // expiry for mixed working solutions
 }
 
 export interface Recipe {
