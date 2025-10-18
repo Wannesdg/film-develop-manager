@@ -16,8 +16,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Star } from "lucide-react"
-import type { FilmRoll, Recipe } from "@/lib/types"
-import { getRecipes } from "@/lib/storage"
+import type { FilmRoll, Recipe, Camera } from "@/lib/types"
+import { getRecipes, getCameras } from "@/lib/storage"
 
 interface FilmRollFormProps {
   filmRoll?: FilmRoll
@@ -28,6 +28,7 @@ interface FilmRollFormProps {
 
 export function FilmRollForm({ filmRoll, open, onOpenChange, onSave }: FilmRollFormProps) {
   const [recipes, setRecipes] = useState<Recipe[]>([])
+  const [cameras, setCameras] = useState<Camera[]>([])
   const [formData, setFormData] = useState<Partial<FilmRoll>>(
     filmRoll || {
       filmName: "",
@@ -47,6 +48,7 @@ export function FilmRollForm({ filmRoll, open, onOpenChange, onSave }: FilmRollF
 
   useEffect(() => {
     setRecipes(getRecipes())
+    setCameras(getCameras())
   }, [])
 
   useEffect(() => {
@@ -157,14 +159,37 @@ export function FilmRollForm({ filmRoll, open, onOpenChange, onSave }: FilmRollF
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="shotDate">Shot Date</Label>
-            <Input
-              id="shotDate"
-              type="date"
-              value={formData.shotDate}
-              onChange={(e) => setFormData({ ...formData, shotDate: e.target.value })}
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="shotDate">Shot Date</Label>
+              <Input
+                id="shotDate"
+                type="date"
+                value={formData.shotDate}
+                onChange={(e) => setFormData({ ...formData, shotDate: e.target.value })}
+              />
+            </div>
+            {cameras.length > 0 && (
+              <div className="space-y-2">
+                <Label htmlFor="cameraId">Camera</Label>
+                <Select
+                  value={formData.cameraId || "none"}
+                  onValueChange={(value) => setFormData({ ...formData, cameraId: value === "none" ? undefined : value })}
+                >
+                  <SelectTrigger id="cameraId">
+                    <SelectValue placeholder="Select a camera (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {cameras.map((camera) => (
+                      <SelectItem key={camera.id} value={camera.id}>
+                        {camera.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
 
           {/* Development fields - only show in edit mode */}

@@ -1,10 +1,11 @@
-import type { Chemical, Recipe, FilmRoll, DevelopmentRound } from "./types"
+import type { Chemical, Recipe, FilmRoll, DevelopmentRound, Camera } from "./types"
 
 const STORAGE_KEYS = {
   CHEMICALS: "film-tracker-chemicals",
   RECIPES: "film-tracker-recipes",
   FILM_ROLLS: "film-tracker-film-rolls",
   DEVELOPMENT_ROUNDS: "film-tracker-development-rounds",
+  CAMERAS: "film-tracker-cameras",
 }
 
 // Chemicals
@@ -141,4 +142,38 @@ export function updateDevelopmentRound(id: string, updates: Partial<DevelopmentR
 export function deleteDevelopmentRound(id: string): void {
   const rounds = getDevelopmentRounds().filter((r) => r.id !== id)
   saveDevelopmentRounds(rounds)
+}
+
+// Cameras
+export function getCameras(): Camera[] {
+  if (typeof window === "undefined") return []
+  const data = localStorage.getItem(STORAGE_KEYS.CAMERAS)
+  return data ? JSON.parse(data) : []
+}
+
+export function saveCameras(cameras: Camera[]): void {
+  if (typeof window === "undefined") return
+  localStorage.setItem(STORAGE_KEYS.CAMERAS, JSON.stringify(cameras))
+}
+
+export function addCamera(camera: Omit<Camera, "id">): Camera {
+  const cameras = getCameras()
+  const newCamera = { ...camera, id: crypto.randomUUID() }
+  cameras.push(newCamera)
+  saveCameras(cameras)
+  return newCamera
+}
+
+export function updateCamera(id: string, updates: Partial<Camera>): void {
+  const cameras = getCameras()
+  const index = cameras.findIndex((c) => c.id === id)
+  if (index !== -1) {
+    cameras[index] = { ...cameras[index], ...updates }
+    saveCameras(cameras)
+  }
+}
+
+export function deleteCamera(id: string): void {
+  const cameras = getCameras().filter((c) => c.id !== id)
+  saveCameras(cameras)
 }

@@ -3,19 +3,20 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Pencil, Trash2, Film, Calendar, Star, CheckCircle } from "lucide-react"
+import { Pencil, Trash2, Film, Calendar, Star, CheckCircle, Camera } from "lucide-react"
 import type { FilmRoll } from "@/lib/types"
 import { formatDate } from "@/lib/utils"
 
 interface FilmRollCardProps {
   filmRoll: FilmRoll
   recipeName?: string
+  cameraName?: string
   onEdit: (filmRoll: FilmRoll) => void
   onDelete: (id: string) => void
   onDevelop?: (filmRoll: FilmRoll) => void
 }
 
-export function FilmRollCard({ filmRoll, recipeName, onEdit, onDelete, onDevelop }: FilmRollCardProps) {
+export function FilmRollCard({ filmRoll, recipeName, cameraName, onEdit, onDelete, onDevelop }: FilmRollCardProps) {
   const isDeveloped = !!filmRoll.developedDate
 
   const formatColors = {
@@ -87,6 +88,13 @@ export function FilmRollCard({ filmRoll, recipeName, onEdit, onDelete, onDevelop
               <span className="font-medium" suppressHydrationWarning>
                 {formatDate(filmRoll.shotDate)}
               </span>
+            </div>
+          )}
+          {cameraName && (
+            <div className="flex items-center gap-2">
+              <Camera className="h-4 w-4 text-muted-foreground" />
+              <span className="text-muted-foreground">Camera:</span>
+              <span className="font-medium">{cameraName}</span>
             </div>
           )}
           {filmRoll.developedDate && (

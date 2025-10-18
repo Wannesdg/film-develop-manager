@@ -29,6 +29,17 @@ export interface Recipe {
   notes?: string
 }
 
+export interface Camera {
+  id: string
+  name: string
+  brand: string
+  model: string
+  format: "35mm" | "120" | "4x5" | "other"
+  notes?: string
+  purchaseDate?: string
+  serialNumber?: string
+}
+
 export interface FilmRoll {
   id: string
   filmName: string
@@ -43,6 +54,7 @@ export interface FilmRoll {
   notes?: string
   rating?: number
   developmentRoundId?: string // Link to development round if developed via a round
+  cameraId?: string // Link to camera used for this roll
 }
 
 export interface DevelopmentRound {

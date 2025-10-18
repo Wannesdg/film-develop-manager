@@ -8,13 +8,14 @@ import { Plus, Search } from "lucide-react"
 import { FilmRollCard } from "@/components/film-roll-card"
 import { FilmRollForm } from "@/components/film-roll-form"
 import { DevelopFilmDialog } from "@/components/develop-film-dialog"
-import { getFilmRolls, addFilmRoll, updateFilmRoll, deleteFilmRoll, getRecipes } from "@/lib/storage"
-import type { FilmRoll, Recipe } from "@/lib/types"
+import { getFilmRolls, addFilmRoll, updateFilmRoll, deleteFilmRoll, getRecipes, getCameras } from "@/lib/storage"
+import type { FilmRoll, Recipe, Camera } from "@/lib/types"
 import { toast } from "sonner"
 
 export default function FilmRollsPage() {
   const [filmRolls, setFilmRolls] = useState<FilmRoll[]>([])
   const [recipes, setRecipes] = useState<Recipe[]>([])
+  const [cameras, setCameras] = useState<Camera[]>([])
   const [filteredFilmRolls, setFilteredFilmRolls] = useState<FilmRoll[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
@@ -27,6 +28,7 @@ export default function FilmRollsPage() {
   useEffect(() => {
     setFilmRolls(getFilmRolls())
     setRecipes(getRecipes())
+    setCameras(getCameras())
   }, [])
 
   useEffect(() => {
@@ -83,6 +85,11 @@ export default function FilmRollsPage() {
   const getRecipeName = (recipeId?: string) => {
     if (!recipeId) return undefined
     return recipes.find((r) => r.id === recipeId)?.name
+  }
+
+  const getCameraName = (cameraId?: string) => {
+    if (!cameraId) return undefined
+    return cameras.find((c) => c.id === cameraId)?.name
   }
 
   const handleDevelop = (filmRoll: FilmRoll) => {
@@ -183,6 +190,7 @@ export default function FilmRollsPage() {
                   key={filmRoll.id}
                   filmRoll={filmRoll}
                   recipeName={getRecipeName(filmRoll.recipeId)}
+                  cameraName={getCameraName(filmRoll.cameraId)}
                   onEdit={handleEdit}
                   onDelete={handleDelete}
                   onDevelop={handleDevelop}

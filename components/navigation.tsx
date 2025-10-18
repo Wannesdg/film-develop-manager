@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Beaker, BookOpen, Film, BarChart3, Home, Menu, X, Layers } from "lucide-react"
+import { Beaker, BookOpen, Film, BarChart3, Home, Menu, X, Layers, Camera } from "lucide-react"
 import { useState } from "react"
 
 export function Navigation() {
@@ -14,6 +14,7 @@ export function Navigation() {
     { href: "/", label: "Home", icon: Home },
     { href: "/chemicals", label: "Chemicals", icon: Beaker },
     { href: "/recipes", label: "Recipes", icon: BookOpen },
+    { href: "/cameras", label: "Cameras", icon: Camera },
     { href: "/film-rolls", label: "Film Rolls", icon: Film },
     { href: "/development-rounds", label: "Dev Rounds", icon: Layers },
     { href: "/stats", label: "Stats", icon: BarChart3 },
